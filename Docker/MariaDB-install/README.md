@@ -43,7 +43,7 @@ docker exec -it mariadb /bin/bash
   
      명령을 실행 후 터미널을 보면 root 계정으로 Container Bash에 접속한 것을 알 수 있습니다.
 
-![3.png](./image/3.png)
+![3.png](./image/2.png)
 
 ## 3. MariaDB 접속
 
@@ -55,7 +55,7 @@ docker exec -it mariadb /bin/bash
 
 > MariaDB utf8은 가변형 3byte이기 때문에 4byte를 사용하는 데이터는 저장할 수가 없습니다. (Ex. 이모지)  그래서 utf8이 아닌 utf8mb4을 사용하였습니다.
 
-![4.png](./image/4.png)
+![4.png](./image/3.png)
 
 `/etc/mysql/my.cnf` 파일에서 내용을 아래와 같이 추가/수정해 줍니다.
 
@@ -80,7 +80,7 @@ Container bash에 접속합니다.
 docker exec -it mariadb /bin/bash
 ```
 
-MariaDB에 접속해서 다시 Characterset을 확인해 보면 **Server와 DB 모두 UTF8로 변경**된 것을 알 수 있습니다.
+MariaDB에 접속해서 다시 Characterset을 확인해 보면 **Server와 DB 모두 utf8mb4로 변경**된 것을 알 수 있습니다.
 
-![5](./image/5.png)
+![5](./image/4.png)
 
