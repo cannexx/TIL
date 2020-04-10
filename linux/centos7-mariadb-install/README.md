@@ -125,7 +125,7 @@ character set이 정상적으로 적용되었다면 아래 이미지 처럼 **Se
 ```
 status
 ```
-![5](./images/5.PNG)
+![5](./images/5.png)
 
 
 
