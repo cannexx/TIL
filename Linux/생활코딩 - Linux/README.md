@@ -842,17 +842,20 @@ Linux에서 SSH 로그인시 인증과정은 아래와 같다.
 
         mkdir test;cd test //test 디렉토리를 만들지 못하더라도 test 디렉토리로 이동한다.
 
-1. &&
+2. &&
+
 - &&는 성공한 경우에 다음 명령어를 실행한다.
 
         mkdir test&&cd test //test 디렉토리가 생성이 되어야 test 디렉토리로 이동한다.
 
-1. &
+3. &
+
 - &는 해당 명령어를 백그라운드로 동작시킬 때 사용한다.
 
         mkdir test&cd test //test 디렉토리를 백그라운드로 생성함과 동시에 test 디렉토리로 이동하려고 했기 때문에 cd test는 존재하지 않는 디렉토리로 진입하려고 시도하기 때문에 오류가 발생한다.
 
-1. {}
+4. {}
+
 - 명령을 그룹핑할 때 사용한다.
 
         mkdir test3 && { cd test3; touch abc; echo 'success!!' } || echo 'There is no dir' //test3가 성공하면 cd test3; touch abc; echo 'success!!'이 실행되며 실패하면 echo 'There is no dir'가 실행된다. 프로그래밍의 삼항연산자와 유사하다.
