@@ -1,6 +1,8 @@
 > [인프런 - 스프링 데이터 JPA](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa)를 보고 정리한 내용입니다.
 
-## 1. ORM 개요
+[TOC]
+
+# 1. ORM 개요
 
 ORM은 애플리케이션의 클래스와 SQL 데이터베이스의 테이블 사이의 **맵핑 정보를 기술한 메타데이터**를 사용하여, 자바 애플리케이션의 객체를 SQL 데이터베이스의 테이블에 **자동으로 (또 깨끗하게) 영속화** 해주는 기술입니다.
 In a nutshell, object/relational mapping is the automated (and transparent) persistence of objects in a Java application to the tables in an SQL database, using metadata that describes the mapping between the classes of the application and the schema of the SQL database.
@@ -12,7 +14,7 @@ In a nutshell, object/relational mapping is the automated (and transparent) pers
   - 필드 - 컬럼
 
   
-## 2. JPA 프로그래밍 1. 프로젝트 세팅
+# 2. JPA 프로그래밍 1. 프로젝트 세팅
 
 - JPA의 핵심은 EntityManager
 - EntityManager 내부에서 hibernate를 사용하기 때문에 JPA 기반 / hibernate 기반 둘 다 사용가능하다. 
@@ -20,9 +22,9 @@ In a nutshell, object/relational mapping is the automated (and transparent) pers
 - Spring Boot에서 hibernate 관련 의존성이 들어오면 HibernateJpaAutoConfiguration에 있는 자동 설정이 진행된다.
 - EntityManager는 Spring Boot 자동설정에 의해 EntityManagerFactoryBuilder가 Bean으로 등록되어있기 때문에 Bean으로 주입받아서 사용 가능하다.
 
-### 프로젝트 세팅
+## 프로젝트 세팅
 
-#### application.properties
+### application.properties
 
 - DB Connection에 필요한 정보와 DB 초기화 전략 설정
 
@@ -40,7 +42,7 @@ In a nutshell, object/relational mapping is the automated (and transparent) pers
   - validate : Entity와 Relation과 스키마 정보를 비교해서 일치하지 않으면 Application이 실행되지 않는다.
   - update : Entity가 변경되면, 변경사항을 추가한다. Entity의 멤버변수가 삭제되어도, Relation의 Column은 삭제되지 않으며, Entity의 멤버변수 이름이 변경되어도 Relation의 Column의 이름은 변경되지 않고 새로운 Column이 생성된다.
 
-#### Account.java
+### Account.java
 
 - Entity 클래스이다.
 
@@ -61,7 +63,7 @@ public class Account {
 }
 ```
 
-#### JpaRunner.java
+### JpaRunner.java
 
 - Spring Boot 실행시 JPA를 테스트 해보기 위한 클래스이다.
 - @PersistenceContext를 사용해서 EntityManager를 주입받는다. 
@@ -223,7 +225,7 @@ public class Account {
 }
 ```
 
-### 쿼리 출력관련 설정
+## 쿼리 출력관련 설정
 
 - spring.jpa.show-sql=true
 
@@ -308,6 +310,236 @@ public class Account {
 }
 
 ```
+
+# 5. JPA 프로그래밍: 1대다 맵핑
+
+## 관계에는 항상 두 Entity가 존재
+
+- 둘 중 하나는 관계의 주인(owning)이고, 하나는 종속된(non-owning) 쪽이다.
+- 관계에서 주인인 쪽은 반대쪽 래퍼런스 쪽을 가지고 있는 쪽이다.
+  - 예를들어 Account(Study를 만든사람)와 Study(스터디)와의 관계는?
+    - Study를 만든 Account일 경우
+      - Study는 하나의 Account를 가질 수 있다.
+      - Study에서 Account Reference를 가지고 있기 때문에 Study과 주인이고, Account가 종속된 쪽이다.
+    - Account에서 Study를 만들 경우
+      - Account는 여러개의 Study를 가질 수 있다.
+      - Account에서 Study Reference를 가지고 있기 때문에 Account가 주인이고, Study가 종속된 쪽이다.
+
+## 단방향 Mapping
+
+- @ManyToOne
+  - owner에서 non-owning를 하나만 가질 때 사용
+    - 예를들어 Study에서 하나의 Account를 가질 때
+  - 기본 mapping 방법은 owner에 정의된 non_owning field의 변수이름에 _id를 붙여서 FK를 생성
+    - 여기서는 non_owing field의 이름이 owner이기 때문에 owner_id라는 FK가 생성된다.
+
+```
+@Entity
+@Getter
+@Setter
+public class Study {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @ManyToOne
+    private Account owner;
+
+}
+```
+
+- @OneToMany
+  - owner에서 non-owning를 여러개 가질 때 사용
+    - 예를들어 Account에서 여러개의 Study를 가질 때
+  - 기본 mapping 방법은 관계에 대한 정보를 가진 Join Table을 생성
+    - Join table 이름은 owner Entity 이름_owner Entity에 정의되어 있는 non-owning의 이름
+      - 예를들어 Entity의 이름이 Account고 Account에 정의되어 있는 non-owning인 Study의 멤버변수 이름이 studies 일때 Join Table 이름은 account_studies가 된다. 
+
+```
+@Entity
+@Getter
+@Setter
+public class Account {
+
+    @Id
+    @GeneratedValue
+    private long id;
+
+    @OneToMany
+    private Set<Study> studies = new HashSet<>();
+}
+```
+
+> Mapping시 @ManyToOne을 쓸지 @OneToMany를 쓸지 헷갈린다면, 뒤에 One과 Many로 판단! owner에서 non-owning를 하나만 가진다면 One! 이며 여러개를 가지면 Many!
+
+## 양방향 Mapping
+
+만약 Entity가 서로 참조하고 싶을때는 어떻게 해야할까?
+
+- 예를들어 Study에서 Account 정보를 참조하고 싶고 Account에서도 Study 정보를 참조하고 싶을때 아래처럼 작성하면 양방향 관계가 될까?
+
+  - 위의 말대로 아래처럼 코드를 짠다면 양방향 관계가 아닌 2개의 단방향 관계가 되버린다.
+
+  ```
+  @Entity
+  @Getter
+  @Setter
+  public class Study {
+  
+      @Id
+      @GeneratedValue
+      private Long id;
+  
+      private String name;
+  
+      @ManyToOne
+      private Account owner;
+  
+  }
+  
+  @Entity
+  @Getter
+  @Setter
+  public class Account {
+  
+      @Id
+      @GeneratedValue
+      private long id;
+  
+      @OneToMany
+      private Set<Study> studies = new HashSet<>();
+  }
+  ```
+
+- 양방향 관계로 만들려면 @OneToMany에 mapperBy 속성을 사용해서 이 관계가 owner에 어떻게 mapping이 되어 있는지 관계를 정의한 필드를 명시해 줘야한다.
+
+  - 양방향 Mapping에서는 기본적으로 FK를 가진 쪽이 owner이기 때문에 non-owning인 Account에 mappedBy 속성을 사용해서 owner에 어떻게 mapping 되어있는지 설정해 줬다. 
+  - @ManyToOne의 기본 mapping 방법은 owner에 정의된 non_owning field의 변수이름에 _id를 붙여서 FK를 생성
+
+  ```
+  @Entity
+  @Getter
+  @Setter
+  public class Study {
+  
+      @Id
+      @GeneratedValue
+      private Long id;
+  
+      private String name;
+  
+      @ManyToOne
+      private Account owner;
+  
+  }
+  
+  @Entity
+  @Getter
+  @Setter
+  public class Account {
+  
+      @Id
+      @GeneratedValue
+      private long id;
+  
+  		@OneToMany(mappedBy = "owner")
+      private Set<Study> studies = new HashSet<>();
+  }
+  ```
+
+- 양방향 관계일때는 관계의 주인인 쪽에 관계를 매핑해야한다!!!!!!!
+
+  - 예를들어 아래코드에서 Study가 주인인데 Account에만 관계매핑을 하면 Study에 DB에 관계정보가 정상적으로 설정되지 않는다.
+
+  ```
+  @Component
+  @Transactional
+  public class JpaRunner implements ApplicationRunner {
+  
+      @PersistenceContext
+      EntityManager entityManager;
+  
+      @Override
+      public void run(ApplicationArguments args) throws Exception {
+          Account account = new Account();
+          account.setUsername("jihun");
+          account.setPassword("jpa");
+  
+          Study study = new Study();
+          study.setName("Spring Data JPA");
+  
+      }
+  }
+  
+  ```
+
+   - 아래처럼 주인인 Study에 관계매핑을 해줘야 DB에 관계정보가 정상적으로 설정된다.
+
+
+  ```
+  @Component
+  @Transactional
+  public class JpaRunner implements ApplicationRunner {
+  
+      @PersistenceContext
+      EntityManager entityManager;
+  
+      @Override
+      public void run(ApplicationArguments args) throws Exception {
+          Account account = new Account();
+          account.setUsername("jihun");
+          account.setPassword("jpa");
+          
+          account.getStudies().add(study);
+          study.setOwner(account);
+  
+      }
+  }
+  ```
+
+- 양방향일때 관계를 설정하는 코드는 보통 convinience method로 묶어서 관계에 한쪽에 넣어서 사용한다.
+
+  - 아래 Account Entity의 addStudy 메서드와 removeStudy 메서드는 양방향 관계를 설정하는 convinience method 이다.
+
+    ```
+    @Entity
+    @Getter
+    @Setter
+    public class Account {
+    
+      @Id
+      @GeneratedValue
+        private long id;
+    
+    	@OneToMany(mappedBy = "owner")
+        private Set<Study> studies = new HashSet<>();
+    
+        public void addStudy(Study study){
+            this.getStudies().add(study);
+        		study.setOwner(this);
+        }
+    
+        public void removeStudy(Study study){
+        	this.getStudies().remove(study);
+          study.setOwner(null);
+        }
+    }
+    ```
+
+    
+
+
+
+
+
+
+
+
+
+
 
 
 
