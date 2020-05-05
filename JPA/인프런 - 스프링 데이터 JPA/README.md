@@ -1,6 +1,25 @@
 > [인프런 - 스프링 데이터 JPA](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa)를 보고 정리한 내용입니다.
 
-[TOC]
+   * [1. ORM 개요](#1-orm-개요)
+   * [2. JPA 프로그래밍 1. 프로젝트 세팅](#2-jpa-프로그래밍-1-프로젝트-세팅)
+      * [프로젝트 세팅](#프로젝트-세팅)
+         * [application.properties](#applicationproperties)
+         * [Account.java](#accountjava)
+         * [JpaRunner.java](#jparunnerjava)
+      * [참고자료](#참고자료)
+   * [3. JPA 프로그래밍 : 엔티티 맵핑](#3-jpa-프로그래밍--엔티티-맵핑)
+      * [Entity mapping](#entity-mapping)
+      * [쿼리 출력관련 설정](#쿼리-출력관련-설정)
+   * [4. JPA 프로그래밍 3. Value 타입 맵핑](#4-jpa-프로그래밍-3-value-타입-맵핑)
+      * [Entity 타입이란?](#entity-타입이란)
+      * [value 타입이란 ?](#value-타입이란-)
+      * [Composite Value Example](#composite-value-example)
+         * [Address.java](#addressjava)
+         * [Account.java](#accountjava-1)
+   * [5. JPA 프로그래밍: 1대다 맵핑](#5-jpa-프로그래밍-1대다-맵핑)
+      * [관계에는 항상 두 Entity가 존재](#관계에는-항상-두-entity가-존재)
+      * [단방향 Mapping](#단방향-mapping)
+      * [양방향 Mapping](#양방향-mapping)
 
 # 1. ORM 개요
 
