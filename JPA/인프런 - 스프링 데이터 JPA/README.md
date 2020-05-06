@@ -3,9 +3,6 @@
    * [1. ORM 개요](#1-orm-개요)
    * [2. JPA 프로그래밍 1. 프로젝트 세팅](#2-jpa-프로그래밍-1-프로젝트-세팅)
       * [프로젝트 세팅](#프로젝트-세팅)
-         * [application.properties](#applicationproperties)
-         * [Account.java](#accountjava)
-         * [JpaRunner.java](#jparunnerjava)
       * [참고자료](#참고자료)
    * [3. JPA 프로그래밍 : 엔티티 맵핑](#3-jpa-프로그래밍--엔티티-맵핑)
       * [Entity mapping](#entity-mapping)
@@ -14,13 +11,14 @@
       * [Entity 타입이란?](#entity-타입이란)
       * [value 타입이란 ?](#value-타입이란-)
       * [Composite Value Example](#composite-value-example)
-         * [Address.java](#addressjava)
-         * [Account.java](#accountjava-1)
    * [5. JPA 프로그래밍: 1대다 맵핑](#5-jpa-프로그래밍-1대다-맵핑)
       * [관계에는 항상 두 Entity가 존재](#관계에는-항상-두-entity가-존재)
       * [단방향 Mapping](#단방향-mapping)
       * [양방향 Mapping](#양방향-mapping)
-
+   * [6. JPA 프로그래밍: Cascade](#6-jpa-프로그래밍-cascade)
+      * [Cascade 옵션](#cascade-옵션)
+      * [Entity의 상태란?](#entity의-상태란)
+      * [그럼 Cascade는 언제 사용해야 하는 걸까?](#그럼-cascade는-언제-사용해야-하는-걸까)
 # 1. ORM 개요
 
 ORM은 애플리케이션의 클래스와 SQL 데이터베이스의 테이블 사이의 **맵핑 정보를 기술한 메타데이터**를 사용하여, 자바 애플리케이션의 객체를 SQL 데이터베이스의 테이블에 **자동으로 (또 깨끗하게) 영속화** 해주는 기술입니다.
@@ -548,7 +546,252 @@ public class Account {
     }
     ```
 
+
+# 6. JPA 프로그래밍: Cascade
+
+## Cascade 옵션
+
+- Entity의 상태변화를 전파시키는 옵션
+
+  - 예를들어 A Entity의 상태가 Transient에서 Persistent로 변할 때 B Entity의 생태도 Transient에서 Persistent로 변하게 하는 옵션
+
+- @OneToMany, @ManyToOne에 cascade 옵션 존재
+
+- 기본적으로 cascade 옵션은 아무것도 없음
+
+## Entity의 상태란?
+
+![image-20200505151555682](/Users/jihun/Library/Application Support/typora-user-images/image-20200505151555682.png)
+
+### Transient
+
+- JPA가 해당 객체에 대해 모르는 상태
+- DB에 mapping 되어 있는 레코드도 전혀 없음.
+- 현재 해당 객체는 DB에 들어갈지 안들어갈지 모르는 상태
+
+### Persistent
+
+- JPA가 관리중인 상태
+
+- save 한다고 해서 바로 DB에 값이 저장되는 것이 아님
+
+  - Persistent로 관리하고 있다가 특정 시점에 데이터를 저장
+    - 특정시점은 트랜잭션이 끝날 떄
+
+- Persistent에서는 여러가지 일을 해줌
+
+  - 1차 캐시
+
+- PersistentContext에 해당 인스턴스를 보관
+
+  - 아래 예제에서 로직상으로 보면 `account` 와 `study`가 DB에 저장된 후 select 쿼리가 발생할 것 같지만 실제로 select 쿼리는 발생하지 않으며, `account` 와 `study` 도 트랜젝션이 끝난 뒤에 insert 된다.
+
+    - `session.load(Account.class, account.getId()` 는 select 쿼리가 발생하시 않고 PersistentContext에 캐시되어 있는 값을 가져온다.
+
+    ```
+    @Component
+    @Transactional
+    public class JpaRunner implements ApplicationRunner {
     
+        @PersistenceContext
+        EntityManager entityManager;
+    
+        @Override
+        public void run(ApplicationArguments args) throws Exception {
+    
+            Account account = new Account();
+            account.setUsername("jihun");
+            account.setPassword("jpa");
+    
+            Study study = new Study();
+            study.setName("Spring Data JPA");
+    
+            account.addStudy(study);
+    
+            Session session = entityManager.unwrap(Session.class);
+            session.save(account);
+            session.save(study);
+    
+            Account jihun = session.load(Account.class, account.getId());
+            System.out.println("====================");
+            System.out.println(jihun.getUsername());
+        }
+    }
+    ```
+
+  - Dirty Checking
+
+    - 객체의 변경사항을 계속 감지
+
+  - Write Behind
+
+    - 객체 상태의 변화를 DB에 최대한 늦게 적용한다는 개념
+
+- Dirthy Checking와 Write Behind를 사용해서 DB의 부하를 줄일 수 있음. 왜냐하면 필요없는 쿼리는 하지를 않아서!
+
+  - 아래 예제에서는 insert 쿼리 2개와 update 쿼리 1개가 발생. select 쿼리는 발생하지 않는다!
+    - SELECT 쿼리가 발생하지 않는 이유는 PersistentContext에 해당 인스턴스가 캐시되어 있기 때문에! 해다 인스턴스를 들고오기 때문
+    - INSERT : `session.save(account);` / `session.save(study);` 
+    - UPDATE : `jihun.setUsername("hongjihun");`
+      - `jihun.setUsername("hongjihun");` 부분은 객체의 값이 변경되어서 Hibernate가 알아서 update 쿼리를 날려준다.
+
+  ```
+  @Component
+  @Transactional
+  public class JpaRunner implements ApplicationRunner {
+  
+      @PersistenceContext
+      EntityManager entityManager;
+  
+      @Override
+      public void run(ApplicationArguments args) throws Exception {
+  
+          Account account = new Account();
+          account.setUsername("jihun");
+          account.setPassword("jpa");
+  
+          Study study = new Study();
+          study.setName("Spring Data JPA");
+  
+          account.addStudy(study);
+  
+          Session session = entityManager.unwrap(Session.class);
+          session.save(account);
+          session.save(study);
+  
+          Account jihun = session.load(Account.class, account.getId());
+          jihun.setUsername("hongjihun");
+          System.out.println("====================");
+          System.out.println(jihun.getUsername());
+      }
+  }
+  ```
+
+  - 아래코드를 보면  `jihun` 변수아래 username이 세 번 바뀌는데 가장 마지막 값이 제일 처음 저장한 username과 동일하기 때문에 update 쿼리가 발생하지 않는다.
+
+  ```
+  @Component
+  @Transactional
+  public class JpaRunner implements ApplicationRunner {
+  
+      @PersistenceContext
+      EntityManager entityManager;
+  
+      @Override
+      public void run(ApplicationArguments args) throws Exception {
+  
+          Account account = new Account();
+          account.setUsername("jihun");
+          account.setPassword("jpa");
+  
+          Study study = new Study();
+          study.setName("Spring Data JPA");
+  
+          account.addStudy(study);
+  
+          Session session = entityManager.unwrap(Session.class);
+          session.save(account);
+          session.save(study);
+  
+          Account jihun = session.load(Account.class, account.getId());
+          jihun.setUsername("hongjihun");
+          jihun.setUsername("hongjihun2");
+          jihun.setUsername("jihun");
+          System.out.println("====================");
+          System.out.println(jihun.getUsername());
+      }
+  }
+  ```
+
+### Detached
+
+-  JPA가 더이상 관리하지 않는 상태
+-  트랜젝션이 끝나고 session 밖으로 나왔을 때
+
+### Removed
+
+- JPA가 관리하긴 하지만 삭제하기로 한 상태
+
+## 그럼 Cascade는 언제 사용해야 하는 걸까?
+
+- 가장 사용하기 좋은건 Domain이 부모-자식 관계일 때
+
+  - 예를들어 게시글 - 댓글
+
+  - 게시글 삭제시 댓글도 같이 삭제되어야 할 때 사용!
+
+- 아래 예제에서 Post Entity에 상태변화가 발생시 Comment Entity에 모든 상태변화를 전달하도록 `cascade = CascadeType.ALL` 를 사용하였다.   
+
+  ```
+  @Entity
+  @Getter
+  @Setter
+  public class Post {
+  
+      @Id
+      @GeneratedValue
+      private Long id;
+  
+      private String title;
+  
+      @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+      private Set<Comment> comments = new HashSet<>();
+  
+      public void addComment(Comment comment){
+          this.getComments().add(comment);
+          comment.setPost(this);
+      }
+  }
+  ```
+
+  ```
+  @Entity
+  @Getter
+  @Setter
+  public class Comment {
+  
+      @Id
+      @GeneratedValue
+      private Long id;
+  
+      private String comment;
+  
+      @ManyToOne
+      private Post post;
+  }
+  ```
+
+  - Post가 Persistent 상태가 될 때 Casecade에 의해 Comment의 상태도 Persistent가 되기 때문에 Comment를 save 하지 않아도 저장된다.
+
+  ```
+  @Component
+  @Transactional
+  public class JpaRunner implements ApplicationRunner {
+  
+      @PersistenceContext
+      EntityManager entityManager;
+  
+      @Override
+      public void run(ApplicationArguments args) throws Exception {
+  
+          Post post = new Post();
+          post.setTitle("Spring Data JPA 언제 보나...");
+  
+          Comment comment = new Comment();
+          comment.setComment("빨리 보고 싶어요.");
+          post.addComment(comment);
+  
+          Comment comment1 = new Comment();
+          comment1.setComment("곧 보여드릴꼐요.");
+          post.addComment(comment1);
+          
+          Session session = entityManager.unwrap(Session.class);
+          session.save(post);
+      }
+  }
+  ```
+
+  
 
 
 
