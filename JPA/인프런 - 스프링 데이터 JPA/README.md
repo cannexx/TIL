@@ -512,7 +512,6 @@ public class Account {
           account.setPassword("jpa");
           account.getStudies().add(study);
           
-          account.getStudies().add(study);
           study.setOwner(account);
   
       }
