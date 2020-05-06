@@ -484,6 +484,7 @@ public class Account {
           Account account = new Account();
           account.setUsername("jihun");
           account.setPassword("jpa");
+          account.getStudies().add(study);
   
           Study study = new Study();
           study.setName("Spring Data JPA");
@@ -509,6 +510,7 @@ public class Account {
           Account account = new Account();
           account.setUsername("jihun");
           account.setPassword("jpa");
+          account.getStudies().add(study);
           
           account.getStudies().add(study);
           study.setOwner(account);
