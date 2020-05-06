@@ -561,7 +561,7 @@ public class Account {
 
 ## Entity의 상태란?
 
-![image-20200505151555682](/Users/jihun/Library/Application Support/typora-user-images/image-20200505151555682.png)
+![Entity의 상태](../../image/image-20200505151555682.png)
 
 ### Transient
 
