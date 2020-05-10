@@ -7,6 +7,8 @@
 * [5. JPA 프로그래밍: 1대다 맵핑](#5-jpa-프로그래밍-1대다-맵핑)
 * [6. JPA 프로그래밍: Cascade](#6-jpa-프로그래밍-cascade)
 * [7. JPA 프로그래밍 6. Fetch](#7-jpa-프로그래밍-6-fetch)
+* [8. JPA 프로그래밍:Query](#7-jpa-프로그래밍query)
+* [9. 스프링 데이터 JPA 소개 및 원리](#8-스프링-데이터-jpa-소개-및-원리)
 
 ## 1. ORM 개요
 
@@ -249,12 +251,16 @@ public class Account {
 }
 ```
 
-### 4. 쿼리 출력관련 설정
+### 3-2. 쿼리 출력관련 설정
 
 * spring.jpa.show-sql=true
   * 쿼리 출력
 * spring.jpa.properties.hibernate.format_sql=true
   * 쿼리를 보기 좋게 출력
+* logging.level.org.hibernate.SQL=debug
+  * 쿼리 출력으로 spring.jpa.show-sql와 logging.level.org.hibernate.SQL 중 하나 사용하면 된다.
+* logging.level.org.hibernate.type.descriptor.sql=trace
+  * 쿼리 ? 값 출력
 
 ## 4. JPA 프로그래밍 3. Value 타입 맵핑
 
@@ -787,3 +793,125 @@ public class Post {
     }
 }
 ```
+
+## 8. JPA 프로그래밍:Query
+
+### 8-1. JQPL (HQL)
+
+* Java Persistence Query Language / Hibernate Query Language
+* SQL과 유사하나 데이터베이스 테이블이 아닌 Entity 객체 모델 기반으로 쿼리 작성
+* DB에 독립적이며, 각 DB에 맞게 SQL로 변경된다.
+
+JQPL을 사용해서 Study Entity에 있는 모든 데이터 가져오기
+
+```java
+@Component
+@Transactional
+public class Runner implements ApplicationRunner {
+
+    @PersistenceContext
+    EntityManager entityManager;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+
+        TypedQuery<Study> query = entityManager.createQuery("SELECT s FROM Study s", Study.class);
+        List<Study> studies = query.getResultList();
+
+        studies.forEach(x -> {
+            System.out.println(x.toString());
+        });
+    }
+}
+```
+
+위의 예제는 Query시 문자열을 사용하기 때문에 TypeSafe 하지 않는다는 단점이 있기 때문에 해당 문제를 보완해서 아래처럼 사용할 수 있다.
+아래 예제는 TypeSafe 하지만, 위에 로직에 비해 길고 알아보기 힘들다는 단점이 있다.
+
+```java
+@Component
+@Transactional
+public class Runner implements ApplicationRunner {
+
+    @PersistenceContext
+    EntityManager entityManager;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Study> criteria = builder.createQuery(Study.class);
+        Root<Study> root = criteria.from(Study.class);
+        criteria.select(root);
+        List<Study> studies = entityManager.createQuery(criteria).getResultList();
+
+        studies.forEach(x -> {
+            System.out.println(x.toString());
+        });
+    }
+}
+```
+
+### 8-2. Native Query
+
+* JQPL (HQL)이 아닌 Native Query도 사용할 수 있다.
+
+```java
+@Component
+@Transactional
+public class Runner implements ApplicationRunner {
+
+    @PersistenceContext
+    EntityManager entityManager;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+
+        List<Study> studies = entityManager
+                            .createNativeQuery("SELECT * FROM study", Study.class)
+                            .getResultList();
+
+        studies.forEach(x -> {
+            System.out.println(x.toString());
+        });
+
+    }
+}
+```
+
+## 9. 스프링 데이터 JPA 소개 및 원리
+
+### 9-1. JpaRepository<Entity, ID> Interface
+
+* Spring Data JPA에서는 해당 인터페이스만 상속 받아도 기본 CRUD가 가능
+* JpaRepository 인터페이스를 상속 받으면 @Repository가 없어로 Bean으로 등록된다.
+* @Repository를 사용하지 Bean으로 등록가능한 이유는
+`@EnableJpaRepositories` 덕분.
+
+```java
+public interface StudyRepository extends JpaRepository<Study, Long> {
+}
+
+@Component
+public class Runner implements ApplicationRunner {
+
+    @Autowired
+    StudyRepository studyRepository;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+
+        List<Study> studies = studyRepository.findAll();
+
+        studies.forEach(x -> {
+            System.out.println(x.toString());
+        });
+    }
+}
+```
+
+### 9-2. @EnableJpaRepositories
+
+* @Repository를 사용하지 않고 JpaRepository 인터페이스를 상속 받은 인터페이스가 Bean으로 등록 가능한 이유는 `@Import(JpaRepositoriesRegistrar.class)`로 부터 시작.
+* 가장 핵심 인터페이스는 ImportBeanDefinitionRegistrar
+  * ImportBeanDefinitionRegistrar는 Bean 관련 정의시 사용
