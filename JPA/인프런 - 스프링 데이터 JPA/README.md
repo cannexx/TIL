@@ -1,14 +1,18 @@
 # [인프런 - 스프링 데이터 JPA](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%EB%8D%B0%EC%9D%B4%ED%84%B0-jpa)를 보고 정리한 내용입니다
 
 * [1. ORM 개요](#1-orm-개요)
-* [2. JPA 프로그래밍 1. 프로젝트 세팅](#2-jpa-프로그래밍-1-프로젝트-세팅)
+* [2. JPA 프로그래밍 : 프로젝트 세팅](#2-jpa-프로그래밍--프로젝트-세팅)
 * [3. JPA 프로그래밍 : 엔티티 맵핑](#3-jpa-프로그래밍--엔티티-맵핑)
-* [4. JPA 프로그래밍 3. Value 타입 맵핑](#4-jpa-프로그래밍-3-value-타입-맵핑)
-* [5. JPA 프로그래밍: 1대다 맵핑](#5-jpa-프로그래밍-1대다-맵핑)
+* [4. JPA 프로그래밍 : Value 타입 맵핑](#4-jpa-프로그래밍--value-타입-맵핑)
+* [5. JPA 프로그래밍 : 1대다 맵핑](#5-jpa-프로그래밍--1대다-맵핑)
 * [6. JPA 프로그래밍: Cascade](#6-jpa-프로그래밍-cascade)
-* [7. JPA 프로그래밍 6. Fetch](#7-jpa-프로그래밍-6-fetch)
-* [8. JPA 프로그래밍:Query](#7-jpa-프로그래밍query)
-* [9. 스프링 데이터 JPA 소개 및 원리](#8-스프링-데이터-jpa-소개-및-원리)
+* [7. JPA 프로그래밍 : Fetch](#7-jpa-프로그래밍--fetch)
+* [8. JPA 프로그래밍 : Query](#8-jpa-프로그래밍--query)
+* [9. 스프링 데이터 JPA 소개 및 원리](#9-스프링-데이터-jpa-소개-및-원리)
+* [10. 스프링 데이터 JPA 활용 파트 소개](#10-스프링-데이터-jpa-활용-파트-소개)
+* [11. 스프링 데이터 JPA Common 1. 리포지토리](#11-스프링-데이터-jpa-common-1-리포지토리)
+* [12. 스프링 데이터 JPA Common 2. 인터페이스 정의하기](#12-스프링-데이터-jpa-common-2-인터페이스-정의하기)
+* [13. JPA Test 관련](#13-jpa-test-관련)
 
 ## 1. ORM 개요
 
@@ -21,7 +25,7 @@ In a nutshell, object/relational mapping is the automated (and transparent) pers
   * 클래스 - 테이블
   * 필드 - 컬럼
 
-## 2. JPA 프로그래밍 1. 프로젝트 세팅
+## 2. JPA 프로그래밍 : 프로젝트 세팅
 
 * JPA의 핵심은 EntityManager
 * EntityManager 내부에서 hibernate를 사용하기 때문에 JPA 기반 / hibernate 기반 둘 다 사용가능하다.
@@ -262,7 +266,7 @@ public class Account {
 * logging.level.org.hibernate.type.descriptor.sql=trace
   * 쿼리 ? 값 출력
 
-## 4. JPA 프로그래밍 3. Value 타입 맵핑
+## 4. JPA 프로그래밍 : Value 타입 맵핑
 
 ### 4-1. Entity 타입이란
 
@@ -332,7 +336,7 @@ public class Account {
 }
 ```
 
-## 5. JPA 프로그래밍: 1대다 맵핑
+## 5. JPA 프로그래밍 : 1대다 맵핑
 
 * 두 개의 Entity에서 하나는 관계의 주인(owning)이며, 하나는 종속된(non-owning) 쪽이다.
 * 관계에서 주인(owning)은 반대쪽 래퍼런스 쪽을 가지고 있는 쪽이다.
@@ -736,7 +740,7 @@ public class Runner implements ApplicationRunner {
 }
 ```
 
-## 7. JPA 프로그래밍 6. Fetch
+## 7. JPA 프로그래밍 : Fetch
 
 fetch란 연관관계에 있는 Entity의 정보를 지금 가져올 것이냐 아니면 사용시 가져올 것이냐에 대한 것이다.
 
@@ -794,7 +798,7 @@ public class Post {
 }
 ```
 
-## 8. JPA 프로그래밍:Query
+## 8. JPA 프로그래밍 : Query
 
 ### 8-1. JQPL (HQL)
 
@@ -915,3 +919,125 @@ public class Runner implements ApplicationRunner {
 * @Repository를 사용하지 않고 JpaRepository 인터페이스를 상속 받은 인터페이스가 Bean으로 등록 가능한 이유는 `@Import(JpaRepositoriesRegistrar.class)`로 부터 시작.
 * 가장 핵심 인터페이스는 ImportBeanDefinitionRegistrar
   * ImportBeanDefinitionRegistrar는 Bean 관련 정의시 사용
+
+## 10. 스프링 데이터 JPA 활용 파트 소개
+
+![스프링 데이터](../../image/spring-data-image.png)
+
+* 스프링 데이터
+  * SQL & NoSQL 저장소 지원 프로젝트 묶음
+* 스프링 데이터 Common
+  * 여러 저장소 지원 프로젝트 공통 기능 제공
+* 스프링 데이터 REST
+  * 저장소의 데이터를 하이퍼미디어 기반 HTTP 리소스(REST API)로 제공하는 프로젝트
+* 스프링 데이터 JPA
+  * 스프링 데이터 Common이 제공하는 기능에 JPA 관련 기능 추가
+
+> https://spring.io/projects/spring-data
+
+## 11. 스프링 데이터 JPA Common 1. 리포지토리
+
+![스프링 데이터](../../image/spring-data-image-1.png)
+
+* JpaRepository는 Spring Data JPA에 속한 Repository이며, 그 외에 PagingAndSortingRepository, CrudRepository, Repository는 Spring Data Common에 속한 Repository 이다.
+
+## 12. 스프링 데이터 JPA Common 2. 인터페이스 정의하기
+
+Repository 인터페이스를 상속받지 않고 Repository를 만들수 있다.
+
+### 12-1. @RepositoryDefinition
+
+* @RepositoryDefinition의 domainClass는 해당 Repositroy의 Entity를 뜻하며, idClass는 id를 의미한다.
+* 아래 메스드는 보면 익숙한 메서드들이 보이는데 JPA에서 지원해주는 기본적인 메서드들이 사용가능하기 때문이다.
+
+```java
+@RepositoryDefinition(domainClass = Comment.class, idClass = Long.class)
+public interface CommentRepository {
+
+    Comment save(Comment comment);
+
+    List<Comment> findAll();
+
+}
+```
+
+### 12-2. @NoRepositoryBean
+
+* @NoRepositoryBean이 붙은 모든 Repository는 모든 Repository는 인스턴스를 생성하지 않는다.
+  > JpaRepository, PagingAndSortingRepository, CrudRepository 인터페이스에도 정의되어 있다. 왜냐하면 해당 Repository를 상속받은 Repository를 사용하기 때문이다.
+* 위의 `@RepositoryDefinition`를 사용해서 Repoistory를 정의하면 특정 Entity에 속하는 Repository이기 떄문에 다른 Entity에서 사용이 불가하다. 만약 해당 Repository를 공통으로 사용하고 싶다면 `@NoRepositoryBean`를 사용해서 Repository를 하나 만들어서 상속받으면 공통으로 사용 가능하다.
+
+```java
+@NoRepositoryBean
+public interface MyRepository<T, ID extends Serializable> extends Repository<T,ID> {
+
+    <E extends T> E save(E Entity);
+
+    List<T> findAll();
+
+    int count();
+}
+
+public interface CommentRepository extends MyRepository<Comment,Long> {
+}
+```
+
+## 13. JPA Test 관련
+
+* @DataJpaTest를 사용하면 JPA 관련 설정만 bean으로 등록한다.
+  * @Entity가 붙은 클래스를 스캔하여 스프링 데이터 JPA 저장소를 구성한다.
+  * 기본적으로 인메모리 데이터베이스를 사용한다. (H2)
+* @DataJpaTest 어노테이션을 보면 @Transactional이 적용되어있는데, Test코드에서 @Transactional 전략은 Rollback이기 때문에, 실제 쿼리가 발생하지 않을 수 있다. 만약 Rollback을 하고싶지 않다면, 아래 예제처럼 @Rollback 어노테이션을 사용하면 된다.
+
+```java
+import static org.assertj.core.api.Assertions.*;
+
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class PostRepositoryTest {
+
+    @Autowired
+    PostRepository postRepository;
+
+    @Test
+    @Rollback(false)
+    public void crudRepository(){
+        // Given
+        Post post = new Post();
+        post.setTitle("Hello");
+        assertThat(post.getId()).isNull();
+
+        // When
+        Post newPost = postRepository.save(post);
+
+        // Then
+        assertThat(newPost.getId()).isNotNull();
+
+        // When
+        List<Post> posts = postRepository.findAll();
+        assertThat(posts.size()).isEqualTo(1);
+        assertThat(posts).contains(newPost);
+
+        // When
+        Page<Post> page = postRepository.findAll(PageRequest.of(0, 10));
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getSize()).isEqualTo(10);
+        assertThat(page.getNumberOfElements()).isEqualTo(1);
+
+        // When
+        page = postRepository.findByTitleContains("He",PageRequest.of(0,10));
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getSize()).isEqualTo(10);
+        assertThat(page.getNumberOfElements()).isEqualTo(1);
+
+        // When
+        long hello = postRepository.countByTitleContains("H ell");
+        assertThat(hello).isEqualTo(1);
+
+    }
+}
+
+```
+
