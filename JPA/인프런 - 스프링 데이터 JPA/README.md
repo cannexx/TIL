@@ -13,6 +13,7 @@
 * [11. 스프링 데이터 JPA Common 1. 리포지토리](#11-스프링-데이터-jpa-common-1-리포지토리)
 * [12. 스프링 데이터 JPA Common 2. 인터페이스 정의하기](#12-스프링-데이터-jpa-common-2-인터페이스-정의하기)
 * [13. JPA Test 관련](#13-jpa-test-관련)
+* [14. 스프링 데이터 Common: Null 처리하기](#14-스프링-데이터-Common:-Null-처리하기)
 
 ## 1. ORM 개요
 
@@ -1038,6 +1039,38 @@ public class PostRepositoryTest {
 
     }
 }
-
 ```
 
+## 14. 스프링 데이터 Common: Null 처리하기
+
+* Spring Data 2.0부터 자바 8의 Optional 지원
+  * 하나의 행을 return 하는 메서드에 결과가 없을 경우 null이 발생하므로, 하나의 행을 return 하는 메서드에는 사용하면 좋을 듯 하다.  
+
+```java
+@NoRepositoryBean
+public interface MyRepository<T, ID extends Serializable> extends Repository<T,ID> {
+    <E extends T> Optional<E> findByIdx( ID idx);
+}
+```
+
+* Collection은 Null을 return 하지 않고, 비어있는 Collection을 return 한다.
+
+* Spring 5.0부터 지원하는 Null 어노테이션 지원
+  * @NonNullApi
+    * 해당 패키지 안에 있는 모든 메서드 파라미터, 리턴타입에 nonnull이 붙는 것과 동일함
+      * package-info.java
+
+        ```java
+        @NonNullApi
+        package com.example.demo;
+
+        import org.springframework.lang.NonNullApi;
+        ```
+
+  * @NonNull
+    * null을 허용하지 않는다.
+    * 파라미터 또는 리턴타입에 붙일 수 있다.
+    * null이 들어올 경우 런타임시 IllegalArgumentException을 발생시킨다.
+  * @Nullable
+    * null을 허용한다.
+    * 파라미터 또는 리턴타입에 붙일 수 있다
