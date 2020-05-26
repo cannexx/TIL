@@ -16,7 +16,6 @@
 * [14. 스프링 데이터 Common: Null 처리하기](#14-스프링-데이터-common-null-처리하기)
 * [15. 스프링 데이터 Common 4. 쿼리 만들기 / 쿼리 만들기 실습](#15-스프링-데이터-common-4-쿼리-만들기--쿼리-만들기-실습)
 
-
 ## 1. ORM 개요
 
 ORM은 애플리케이션의 클래스와 SQL 데이터베이스의 테이블 사이의 **맵핑 정보를 기술한 메타데이터**를 사용하여, 자바 애플리케이션의 객체를 SQL 데이터베이스의 테이블에 **자동으로 (또 깨끗하게) 영속화** 해주는 기술입니다.
@@ -38,7 +37,7 @@ In a nutshell, object/relational mapping is the automated (and transparent) pers
 
 ### 2-1. 프로젝트 세팅
 
-### 2-1-1. application.properties
+#### 2-1-1. application.properties
 
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/springdata
@@ -56,7 +55,7 @@ spring.jpa.hibernate.ddl-auto=create
     * validate : Entity와 Relation과 스키마 정보를 비교해서 일치하지 않으면 Application이 실행되지 않는다.
     * update : Entity가 변경되면, 변경사항을 추가한다. Entity의 멤버변수가 삭제되어도, Relation의 Column은 삭제되지 않으며, Entity의 멤버변수 이름이 변경되어도 Relation의 Column의 이름은 변경되지 않고 새로운 Column이 생성된다.
 
-### 2-1-2. Account.java
+#### 2-1-2. Account.java
 
 Entity 클래스이다.
 
@@ -76,7 +75,7 @@ public class Account {
 }
 ```
 
-### 2-2-2. JpaRunner.java
+#### 2-2-2. JpaRunner.java
 
 * Spring Boot 실행시 JPA를 테스트 해보기 위한 클래스이다.
 * @PersistenceContext를 사용해서 EntityManager를 주입받는다.  
@@ -119,7 +118,7 @@ Domain 모델을 relation에 어떻게 매핑시킬시 정보(맵핑 정보를 �
 
 ### 3-1. Entity mapping
 
-### 3-1-1. @Entity
+#### 3-1-1. @Entity
 
 * Domain 클래스가 Entity라는 것을 표현
 * Entity는 객체 세상에서 부르는 이름
@@ -135,7 +134,7 @@ Domain 모델을 relation에 어떻게 매핑시킬시 정보(맵핑 정보를 �
 public class Account {}
 ```
 
-### 3-1-2. @Table
+#### 3-1-2. @Table
 
 * relation 세상에서 부르는 이름
 * @Entity의 이름이 기본값이다.
@@ -147,7 +146,7 @@ public class Account {}
 public class Account {}
 ```
 
-### 3-1-3. @Id
+#### 3-1-3. @Id
 
 * Entity의 Primary Key를 mapping 할 때 사용
 * 자바의 모든 primitive type과 wrapper type 모두 사용 가능하다.
@@ -182,7 +181,7 @@ public class Account {
 }
 ```
 
-### 3-1-5. @Column
+#### 3-1-5. @Column
 
 * 모든 Entity에 있는 멤버변수에는 @Column이 붙어있다.
 * @Column에는 다양한 속성이 있다. name, unique, nullable 등....
@@ -200,7 +199,7 @@ public class Account {
 }
 ```
 
-### 3-1-6. @Temporal
+#### 3-1-6. @Temporal
 
 * Column에 날짜 및 시간을 어떻게 저장할지 설정
 * JPA 2.1까지은 Date와 Calendar만 지원
@@ -241,7 +240,7 @@ public class Account {
 }
 ```
 
-### 3-1-7. @Transient
+#### 3-1-7. @Transient
 
 * 해당 멤버변수를 Column으로 매핑하지 않는다.
 
@@ -286,7 +285,7 @@ public class Account {
     * primitive Type 보다 조금 더 큰 단위의 Value Type 이다.
   * Collection Value Type
 
-### 4-2-1. Composite Value Type
+#### 4-2-1. Composite Value Type
 
 * primitive Type 보다 조금 더 큰 단위의 Value Type 이다.
 * Composite Value Type에는 클래스에 @Embeddable 어노테이션을 사용해서 해당 클래스가 Composite Value 임을 지정한다.
@@ -353,7 +352,7 @@ public class Account {
 
 ### 5-1. 단방향 Mapping
 
-### 5-1-1. @ManyToOne
+#### 5-1-1. @ManyToOne
 
 * owner에서 non-owning를 하나만 가질 때 사용
   * 예를들어 Study에서 하나의 Account를 가질 때
@@ -378,7 +377,7 @@ public class Study {
 }
 ```
 
-### 5-1-2. @OneToMany
+#### 5-1-2. @OneToMany
 
 * owner에서 non-owning를 여러개 가질 때 사용
   * 예를들어 Account에서 여러개의 Study를 가질 때
@@ -536,13 +535,13 @@ public class Runner implements ApplicationRunner {
 
 ![스프링 데이터](../../image/인프런-spring_data_jpa/3.png)
 
-### 6-2-1. Transient
+#### 6-2-1. Transient
 
 * JPA가 해당 객체에 대해 모르는 상태
 * DB에 mapping 되어 있는 레코드도 전혀 없음.
 * 현재 해당 객체는 DB에 들어갈지 안들어갈지 모르는 상태
 
-### 6-2-2. Persistent
+#### 6-2-2. Persistent
 
 * JPA가 관리중인 상태
 * save 한다고 해서 바로 DB에 값이 저장되는 것이 아니다.
@@ -666,16 +665,16 @@ public class JpaRunner implements ApplicationRunner {
 }
 ```
 
-### 6-2-3. Detached
+#### 6-2-3. Detached
 
 * JPA가 더이상 관리하지 않는 상태
 * 트랜젝션이 끝나고 session 밖으로 나왔을 때
 
-### 6-2-4. Removed
+#### 6-2-4. Removed
 
 * JPA가 관리하긴 하지만 삭제하기로 한 상태
 
-### 6-3. 그럼 Cascade는 언제 사용해야 하는 걸까
+#### 6-3. 그럼 Cascade는 언제 사용해야 하는 걸까
 
 * 가장 사용하기 좋은건 Domain이 부모-자식 관계일 때
   * 예를들어 게시글 - 댓글
@@ -683,7 +682,7 @@ public class JpaRunner implements ApplicationRunner {
 
 아래 예제에서 Post Entity에 상태변화가 발생시 Comment Entity에 모든 상태변화를 전달하도록 `cascade = CascadeType.ALL` 를 사용하였다.
 
-```
+```java
 @Entity
 @Getter
 @Setter
@@ -1082,7 +1081,7 @@ public interface MyRepository<T, ID extends Serializable> extends Repository<T,I
 
 ### 15-1. 쿼리 만드는 방법
 
-### 15-1-1. 메소드 이름을 분석해서 쿼리 만드는 방법 (CREATE)
+#### 15-1-1. 메소드 이름을 분석해서 쿼리 만드는 방법 (CREATE)
 
 스프링 데이터 JPA가 메서드 findByTitleContains 이름을 분석하여 쿼리를 만들어 준다.
 
@@ -1093,7 +1092,7 @@ public interface CommentRepository extends MyRepository<Comment,Long> {
 }
 ```
 
-### 15-1-2. 미리 정리해 둔 쿼리 찾아 사용하는 방법 (USE_DECLARED_QUERY)
+#### 15-1-2. 미리 정리해 둔 쿼리 찾아 사용하는 방법 (USE_DECLARED_QUERY)
 
 * @Query, @NamedQuery 등 에 정의된 쿼리를 사용한다.
 
@@ -1105,7 +1104,7 @@ public interface CommentRepository extends MyRepository<Comment,Long> {
 }
 ```
 
-### 15-1-3.미리 정의한 쿼리 찾아보고 없으면 만들기(CREATE_IF_NOT_FOUND)
+#### 15-1-3.미리 정의한 쿼리 찾아보고 없으면 만들기(CREATE_IF_NOT_FOUND)
 
 스프링 데이터 JPA의 기본전략으로 14-1-2 처럼 미리 정의한 쿼리가 없으면 14-1-1의 방법을 사용한다
 
@@ -1130,7 +1129,7 @@ public class DemoApplication {
 
 ### 15-4. 쿼리 만들기 예제
 
-### 15-4-1. Comment Entity
+#### 15-4-1. Comment Entity
 
 ```java
 @Entity
@@ -1154,7 +1153,7 @@ public class Comment {
 
 ```
 
-### 15-4-2. CommentRepositry
+#### 15-4-2. CommentRepositry
 
 ```java
 public interface CommentRepository extends MyRepository<Comment,Long> {
@@ -1166,7 +1165,7 @@ public interface CommentRepository extends MyRepository<Comment,Long> {
 
 ```
 
-### 15-4-3. Test
+#### 15-4-3. Test
 
 ```java
 import static org.assertj.core.api.Assertions.assertThat;
