@@ -13,7 +13,9 @@
 * [11. 스프링 데이터 JPA Common 1. 리포지토리](#11-스프링-데이터-jpa-common-1-리포지토리)
 * [12. 스프링 데이터 JPA Common 2. 인터페이스 정의하기](#12-스프링-데이터-jpa-common-2-인터페이스-정의하기)
 * [13. JPA Test 관련](#13-jpa-test-관련)
-* [14. 스프링 데이터 Common: Null 처리하기](#14-스프링-데이터-Common:-Null-처리하기)
+* [14. 스프링 데이터 Common: Null 처리하기](#14-스프링-데이터-common-null-처리하기)
+* [15. 스프링 데이터 Common 4. 쿼리 만들기 / 쿼리 만들기 실습](#15-스프링-데이터-common-4-쿼리-만들기--쿼리-만들기-실습)
+
 
 ## 1. ORM 개요
 
@@ -36,7 +38,7 @@ In a nutshell, object/relational mapping is the automated (and transparent) pers
 
 ### 2-1. 프로젝트 세팅
 
-#### 2-1-1. application.properties
+### 2-1-1. application.properties
 
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/springdata
@@ -117,7 +119,7 @@ Domain 모델을 relation에 어떻게 매핑시킬시 정보(맵핑 정보를 �
 
 ### 3-1. Entity mapping
 
-#### 3-1-1. @Entity
+### 3-1-1. @Entity
 
 * Domain 클래스가 Entity라는 것을 표현
 * Entity는 객체 세상에서 부르는 이름
@@ -133,7 +135,7 @@ Domain 모델을 relation에 어떻게 매핑시킬시 정보(맵핑 정보를 �
 public class Account {}
 ```
 
-#### 3-1-2. @Table
+### 3-1-2. @Table
 
 * relation 세상에서 부르는 이름
 * @Entity의 이름이 기본값이다.
@@ -145,7 +147,7 @@ public class Account {}
 public class Account {}
 ```
 
-#### 3-1-3. @Id
+### 3-1-3. @Id
 
 * Entity의 Primary Key를 mapping 할 때 사용
 * 자바의 모든 primitive type과 wrapper type 모두 사용 가능하다.
@@ -159,7 +161,7 @@ public class Account {
 }
 ```
 
-#### 3-1-4. @GeneratedValue
+### 3-1-4. @GeneratedValue
 
 * Primary Key의 생성방법을 mapping 하는 어노테이션
 * strategy 속성을 사용해서 생성 전략과 생성기를 설정할 수 있다.
@@ -180,7 +182,7 @@ public class Account {
 }
 ```
 
-#### 3-1-5. @Column
+### 3-1-5. @Column
 
 * 모든 Entity에 있는 멤버변수에는 @Column이 붙어있다.
 * @Column에는 다양한 속성이 있다. name, unique, nullable 등....
@@ -198,7 +200,7 @@ public class Account {
 }
 ```
 
-#### 3-1-6. @Temporal
+### 3-1-6. @Temporal
 
 * Column에 날짜 및 시간을 어떻게 저장할지 설정
 * JPA 2.1까지은 Date와 Calendar만 지원
@@ -239,7 +241,7 @@ public class Account {
 }
 ```
 
-#### 3-1-7. @Transient
+### 3-1-7. @Transient
 
 * 해당 멤버변수를 Column으로 매핑하지 않는다.
 
@@ -284,7 +286,7 @@ public class Account {
     * primitive Type 보다 조금 더 큰 단위의 Value Type 이다.
   * Collection Value Type
 
-#### 4-2-1. Composite Value Type
+### 4-2-1. Composite Value Type
 
 * primitive Type 보다 조금 더 큰 단위의 Value Type 이다.
 * Composite Value Type에는 클래스에 @Embeddable 어노테이션을 사용해서 해당 클래스가 Composite Value 임을 지정한다.
@@ -351,7 +353,7 @@ public class Account {
 
 ### 5-1. 단방향 Mapping
 
-#### 5-1-1. @ManyToOne
+### 5-1-1. @ManyToOne
 
 * owner에서 non-owning를 하나만 가질 때 사용
   * 예를들어 Study에서 하나의 Account를 가질 때
@@ -376,7 +378,7 @@ public class Study {
 }
 ```
 
-#### 5-1-2. @OneToMany
+### 5-1-2. @OneToMany
 
 * owner에서 non-owning를 여러개 가질 때 사용
   * 예를들어 Account에서 여러개의 Study를 가질 때
@@ -532,7 +534,7 @@ public class Runner implements ApplicationRunner {
 
 ### 6-2. Entity의 상태란
 
-![Entity의 상태](../../image/image-20200505151555682.png)
+![스프링 데이터](../../image/인프런-spring_data_jpa/3.png)
 
 ### 6-2-1. Transient
 
@@ -673,7 +675,7 @@ public class JpaRunner implements ApplicationRunner {
 
 * JPA가 관리하긴 하지만 삭제하기로 한 상태
 
-## 6-3. 그럼 Cascade는 언제 사용해야 하는 걸까
+### 6-3. 그럼 Cascade는 언제 사용해야 하는 걸까
 
 * 가장 사용하기 좋은건 Domain이 부모-자식 관계일 때
   * 예를들어 게시글 - 댓글
@@ -923,7 +925,7 @@ public class Runner implements ApplicationRunner {
 
 ## 10. 스프링 데이터 JPA 활용 파트 소개
 
-![스프링 데이터](../../image/spring-data-image.png)
+![스프링 데이터](../../image/인프런-spring_data_jpa/1.png)
 
 * 스프링 데이터
   * SQL & NoSQL 저장소 지원 프로젝트 묶음
@@ -938,7 +940,7 @@ public class Runner implements ApplicationRunner {
 
 ## 11. 스프링 데이터 JPA Common 1. 리포지토리
 
-![스프링 데이터](../../image/spring-data-image-1.png)
+![스프링 데이터](../../image/인프런-spring_data_jpa/2.png)
 
 * JpaRepository는 Spring Data JPA에 속한 Repository이며, 그 외에 PagingAndSortingRepository, CrudRepository, Repository는 Spring Data Common에 속한 Repository 이다.
 
@@ -965,6 +967,7 @@ public interface CommentRepository {
 ### 12-2. @NoRepositoryBean
 
 * @NoRepositoryBean이 붙은 모든 Repository는 모든 Repository는 인스턴스를 생성하지 않는다.
+  
   > JpaRepository, PagingAndSortingRepository, CrudRepository 인터페이스에도 정의되어 있다. 왜냐하면 해당 Repository를 상속받은 Repository를 사용하기 때문이다.
 * 위의 `@RepositoryDefinition`를 사용해서 Repoistory를 정의하면 특정 Entity에 속하는 Repository이기 떄문에 다른 Entity에서 사용이 불가하다. 만약 해당 Repository를 공통으로 사용하고 싶다면 `@NoRepositoryBean`를 사용해서 Repository를 하나 만들어서 상속받으면 공통으로 사용 가능하다.
 
@@ -1074,3 +1077,145 @@ public interface MyRepository<T, ID extends Serializable> extends Repository<T,I
   * @Nullable
     * null을 허용한다.
     * 파라미터 또는 리턴타입에 붙일 수 있다
+
+## 15. 스프링 데이터 Common 4. 쿼리 만들기 / 쿼리 만들기 실습
+
+### 15-1. 쿼리 만드는 방법
+
+### 15-1-1. 메소드 이름을 분석해서 쿼리 만드는 방법 (CREATE)
+
+스프링 데이터 JPA가 메서드 findByTitleContains 이름을 분석하여 쿼리를 만들어 준다.
+
+```java
+public interface CommentRepository extends MyRepository<Comment,Long> {
+
+    List<Command> findByTitleContains(String keyword);
+}
+```
+
+### 15-1-2. 미리 정리해 둔 쿼리 찾아 사용하는 방법 (USE_DECLARED_QUERY)
+
+* @Query, @NamedQuery 등 에 정의된 쿼리를 사용한다.
+
+```java
+public interface CommentRepository extends MyRepository<Comment,Long> {
+
+    @Query(value="SELECT c FROM Comment AS c", nativeQuery = true)
+    List<Command> findByTitleContains(String keyword);
+}
+```
+
+### 15-1-3.미리 정의한 쿼리 찾아보고 없으면 만들기(CREATE_IF_NOT_FOUND)
+
+스프링 데이터 JPA의 기본전략으로 14-1-2 처럼 미리 정의한 쿼리가 없으면 14-1-1의 방법을 사용한다
+
+### 15-2. CREATE Query 만드는 방법
+
+![스프링 데이터](../../image/인프런-spring_data_jpa/4.png)
+
+### 15-3. 쿼리 생성 전략 선택하는 법
+
+쿼리 생성전략은 @EnableJpaRepositories의 queryLookupStrategy 속성을 사용해서 정할 수 있다. 전략은 CREATE, USE_DECLARED_QUERY, CREATE_IF_NOT_FOUND가 있으며, **기본전략은 CREATE_IF_NOT_FOUND 이다.**
+
+```java
+@SpringBootApplication
+@EnableJpaRepositories(queryLookupStrategy = QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND)
+public class DemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+```
+
+### 15-4. 쿼리 만들기 예제
+
+### 15-4-1. Comment Entity
+
+```java
+@Entity
+@Getter
+@Setter
+public class Comment {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String comment;
+
+    @ManyToOne
+    private Post post;
+
+    private Date created;
+
+    private int likeCount = 0;
+}
+
+```
+
+### 15-4-2. CommentRepositry
+
+```java
+public interface CommentRepository extends MyRepository<Comment,Long> {
+
+    List<Comment> findByCommentContainingIgnoreCaseAndLikeCountGreaterThan(String keyword, int likeCount);
+    Page<Comment> findByCommentContainsIgnoreCaseOrderByLikeCountAsc(String keyword, Pageable pageable);
+    Stream<Comment> findByCommentContainsIgnoreCaseOrderByLikeCountDesc(String keyword, Pageable pageable);
+}
+
+```
+
+### 15-4-3. Test
+
+```java
+import static org.assertj.core.api.Assertions.assertThat;
+
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class CommentRepostoryTest {
+
+    @Autowired
+    CommentRepository commentRepository;
+
+    @Test
+    public void findByCommentContainingIgnoreCaseAndLikeCountGreaterThanTest(){
+        this.createComment(100,"spring data jpa");
+
+        List<Comment> comments = commentRepository.findByCommentContainingIgnoreCaseAndLikeCountGreaterThan("Spring",10);
+        assertThat(comments.size()).isEqualTo(1);
+    }
+
+    // 페이징 테스트
+    @Test
+    public void findByCommentContainsIgnoreCaseOrderByLikeCountAscTest(){
+        this.createComment(100,"spring data jpa");
+        this.createComment(55,"hibernate spring");
+        PageRequest pageRequest = PageRequest.of(0,10, Sort.by(Sort.Direction.DESC,"LikeCount"));
+        Page<Comment> comments = commentRepository.findByCommentContainsIgnoreCaseOrderByLikeCountAsc("Spring", pageRequest);
+        assertThat(comments.getTotalElements()).isEqualTo(2);
+        assertThat(comments).first().hasFieldOrPropertyWithValue("likeCount",55);
+    }
+
+    @Test
+    public void findByCommentContainsIgnoreCaseOrderByLikeCountDescTest(){
+        this.createComment(100,"spring data jpa");
+        this.createComment(55,"hibernate spring");
+        PageRequest pageRequest = PageRequest.of(0,10, Sort.by(Sort.Direction.DESC,"LikeCount"));
+
+        // try-with-resource 사용할 것. (Stream을 다 쓴다음에 close() 해야 함)
+        try(Stream<Comment> comments = commentRepository.findByCommentContainsIgnoreCaseOrderByLikeCountDesc("Spring", pageRequest)) {
+            Comment firstComment =  comments.findFirst().get();
+            assertThat(firstComment.getLikeCount()).isEqualTo(100);
+        }
+    }
+
+    private void createComment(int likeCount, String comment){
+        Comment newComment = new Comment();
+        newComment.setComment(comment);
+        newComment.setLikeCount(likeCount);
+        commentRepository.save(newComment);
+    }
+
+}
+```
