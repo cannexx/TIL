@@ -1166,7 +1166,7 @@ public interface CommentRepository extends MyRepository<Comment,Long> {
 
 ```
 
-#### 15-4-3. Test
+### 15-4-3. Test
 
 ```java
 import static org.assertj.core.api.Assertions.assertThat;
