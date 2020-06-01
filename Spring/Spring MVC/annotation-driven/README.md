@@ -4,8 +4,8 @@
 
 * DataBinding에 사용되는 PropertyEditors 외에 `ConversionService` instance를 사용한 변환
 * ConversionService를 통해 `@NumberFormat` 어노테이션을 사용해서 **Number Field formatting 지원**
-  * ``@DateTimeFormat`` 어노테이션을 사용해서 **Date, Calendar, Long, Joda Time Field formatting 지원**
-  * ClassPath에 JSR-303 Provider가 존재하면 **@Controller에서 입력을 검증**하기 위한 ``@Valid`` 지원
+* ``@DateTimeFormat`` 어노테이션을 사용해서 **Date, Calendar, Long, Joda Time Field formatting 지원**
+* ClassPath에 JSR-303 Provider가 존재하면 **@Controller에서 입력을 검증**하기 위한 ``@Valid`` 지원
     * JSR-303은 Bean Validation 스펙
 * @RequestBody 메서드 매개 변수 및 @ResponseBody가 붙어있는 @Requestmapping 또는 @ExceptionHandler 메서드의 return 값에 ``HttpMessageConverter`` 지원
   * annotation-driven으로 인해 활성화 되는 HttpMessageConverters
