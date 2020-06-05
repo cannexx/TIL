@@ -15,6 +15,7 @@
 * [13. JPA Test 관련](#13-jpa-test-관련)
 * [14. 스프링 데이터 Common: Null 처리하기](#14-스프링-데이터-common-null-처리하기)
 * [15. 스프링 데이터 Common 4. 쿼리 만들기 / 쿼리 만들기 실습](#15-스프링-데이터-common-4-쿼리-만들기--쿼리-만들기-실습)
+* [16. 스프링 데이터 Common: 커스텀 리포지토리](#16-스프링-데이터-Common-커스텀-리포지토리)
 
 ## 1. ORM 개요
 
@@ -533,7 +534,7 @@ public class Runner implements ApplicationRunner {
 
 ### 6-2. Entity의 상태란
 
-![스프링 데이터](../../image/인프런-spring_data_jpa/3.png)
+![스프링 데이터](./images/3.png)
 
 #### 6-2-1. Transient
 
@@ -924,7 +925,7 @@ public class Runner implements ApplicationRunner {
 
 ## 10. 스프링 데이터 JPA 활용 파트 소개
 
-![스프링 데이터](../../image/인프런-spring_data_jpa/1.png)
+![스프링 데이터](./images/1.png)
 
 * 스프링 데이터
   * SQL & NoSQL 저장소 지원 프로젝트 묶음
@@ -939,7 +940,7 @@ public class Runner implements ApplicationRunner {
 
 ## 11. 스프링 데이터 JPA Common 1. 리포지토리
 
-![스프링 데이터](../../image/인프런-spring_data_jpa/2.png)
+![스프링 데이터](./images/2.png)
 
 * JpaRepository는 Spring Data JPA에 속한 Repository이며, 그 외에 PagingAndSortingRepository, CrudRepository, Repository는 Spring Data Common에 속한 Repository 이다.
 
@@ -1110,7 +1111,7 @@ public interface CommentRepository extends MyRepository<Comment,Long> {
 
 ### 15-2. CREATE Query 만드는 방법
 
-![스프링 데이터](../../image/인프런-spring_data_jpa/4.png)
+![스프링 데이터](./images/4.png)
 
 ### 15-3. 쿼리 생성 전략 선택하는 법
 
@@ -1214,6 +1215,115 @@ public class CommentRepostoryTest {
         newComment.setComment(comment);
         newComment.setLikeCount(likeCount);
         commentRepository.save(newComment);
+    }
+
+}
+```
+
+## 16. 스프링 데이터 Common: 커스텀 리포지토리
+
+* Custom Repository를 사용하면 Spring data Repository **인터페이스에 기능 추가** 가능
+* Custom Repository를 사용하면 Spring data Repository **기본 기능 덮어 쓰기** 가능
+  * Custom Repository가 Spring data Repository 보다 우선 순위가 높기 때문에 Custom Repository의 메서드가 호출된다.
+
+### 16-1. Entity
+
+```java
+@Entity
+@Getter
+@Setter
+public class Post {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String title;
+
+    @Lob
+    private String content;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+}
+```
+
+### 16-2. Custom Repository
+
+Custom Repository는 interface로 만드며, 네이밍 규칙에 제한은 없다.
+
+다만 Custom Repository의 구현체를 만들때는 **Custom Repository에 Impl을 붙여서 만들어야 한다.**
+
+```java
+public interface PostCustomRepository<T> {
+
+    List<Post> findByPost();
+
+    void delete(T entity);
+}
+```
+
+### 16-3. Custom Repository 구현체
+
+* 네이밍 규칙에 의해 Custom Repository의 이름인 PostCustomRepository에 Impl을 붙인 ``PostCustomRepositoryImpl``가 구현체의 이름이다.
+
+> @EnableJpaRepositories에 repositoryImplementationPostfix 속성을 사용해서 네이밍 규칙을 변경할 수 있다. 예를들어 (repositoryImplementationPostfix = "Default") 를 사용하면 PostCustomRepositoryImpl가 아닌 PostCustomRepositoryDefault로 사용할 수 있다.
+
+```java
+@Repository
+@Transactional
+public class PostCustomRepositoryImpl implements PostCustomRepository<Post> {
+
+    @Autowired
+    EntityManager entityManager;
+
+    @Override
+    public List<Post> findByPost() {
+        System.out.println("custom findMyPost");
+        return entityManager.createQuery("SELECT p FROM Post AS p",Post.class).getResultList();
+    }
+
+    @Override
+    public void delete(Post entity) {
+        System.out.println("custom delete");
+        entityManager.remove(entity);
+    }
+}
+```
+
+### 16-4. Repository
+
+* JpaRepository와 Custom Repository인 PostCustomRepository를 상속받고 있다.
+
+```java
+public interface PostRepository extends JpaRepository<Post, Long>, PostCustomRepository<Post> {
+}
+```
+
+### 16-5. Test
+
+* Test Code에서 Custom Repository에 정의한 findByPost() 메서드를 사용하는 것을 알 수 있다.
+* delete 메서드 우선순위에 의해는 SimpleJpaRepository에 있는 delete 메서드가 아닌 PostCustomRepository에 정의된 delete 메서드가 호출된다.
+
+```java
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class PostRepositoryTest {
+
+    @Autowired
+    PostRepository postRepository;
+
+    @Test
+    public void crud(){
+        postRepository.findByPost();
+
+        Post post = new Post();
+        post.setTitle("hibernate");
+        postRepository.save(post);
+
+        postRepository.findByPost();
+
+        postRepository.delete(post);
+        postRepository.flush();
     }
 
 }
