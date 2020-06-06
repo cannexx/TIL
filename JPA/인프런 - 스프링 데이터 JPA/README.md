@@ -1269,8 +1269,6 @@ public interface PostCustomRepository<T> {
 > @EnableJpaRepositories에 repositoryImplementationPostfix 속성을 사용해서 네이밍 규칙을 변경할 수 있다. 예를들어 (repositoryImplementationPostfix = "Default") 를 사용하면 PostCustomRepositoryImpl가 아닌 PostCustomRepositoryDefault로 사용할 수 있다.
 
 ```java
-@Repository
-@Transactional
 public class PostCustomRepositoryImpl implements PostCustomRepository<Post> {
 
     @Autowired
