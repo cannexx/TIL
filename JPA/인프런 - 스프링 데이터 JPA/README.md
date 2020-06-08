@@ -16,6 +16,7 @@
 * [14. 스프링 데이터 Common: Null 처리하기](#14-스프링-데이터-common-null-처리하기)
 * [15. 스프링 데이터 Common 4. 쿼리 만들기 / 쿼리 만들기 실습](#15-스프링-데이터-common-4-쿼리-만들기--쿼리-만들기-실습)
 * [16. 스프링 데이터 Common: 커스텀 리포지토리](#16-스프링-데이터-Common-커스텀-리포지토리)
+* [17. 스프링 데이터 Common: 커스텀 리포지토리 커스터마이징](#17-스프링-데이터-Common-커스텀-리포지토리-커스터마이징)
 
 ## 1. ORM 개요
 
@@ -1324,5 +1325,120 @@ public class PostRepositoryTest {
         postRepository.flush();
     }
 
+}
+```
+
+## 17. 스프링 데이터 Common: 커스텀 리포지토리 커스터마이징
+
+모든 Repository에 공통적으로 추가하고 싶은 기능이 있거나 Spring data Repository에 덮어쓰고 싶은 기본 기능이 있다면 아래 방법을 사용해서 처리할 수 있따.
+
+### 17-1. JpaRepository를 상속받는 Interface 정의
+
+* Persistence Context에 Entity가 존재하는지 확인하기 위한 contains 메서드를 추가하였다.
+
+```java
+@NoRepositoryBean
+public interface
+MyRepository<T, ID extends Serializable> extends JpaRepository<T, ID> {
+
+    boolean contains(T entity);
+}
+```
+
+### 17-2. 기본 구현체를 상속 받는 커스텀 구현체 생성
+
+* Spring Data Repository의 구현체중 가장 많은 기능을 가진 SimpleJpaRepository를 상속받았으며, Custom Repository에 정의한 메서드를 구현하기 위해 위에서 정의한 MyRepository 인터페이스를 상속 받았다.
+* SimpleJpaRepository 상속시 아래 정의된 생성자가 2개인 인터페이스를 구현해야하며, 해당 생성자에 entityManager가 존재하기 때문에 해당 entityManager를 사용하면 된다.
+
+```java
+public class SimpleMyRepository<T, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements MyRepository<T, ID> {
+
+    private EntityManager entityManager;
+
+    public SimpleMyRepository(JpaEntityInformation<T, ?> entityInformation, EntityManager entityManager) {
+        super(entityInformation, entityManager);
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public boolean contains(Object entity) {
+        return entityManager.contains(entity);
+    }
+}
+```
+
+> 해당 구현체에 대한 네이밍 규칙은 따로 없다!
+
+### 17-3. @EnableJpaRepositories에 repositoryBaseClass 설정
+
+* @EnableJpaRepositories에 repositoryBaseClass 속성에 커스텀 리포지토리 커스터마이징한 구현체를 지정해주면 된다.
+
+```java
+@SpringBootApplication
+@EnableJpaRepositories(repositoryBaseClass = SimpleMyRepository.class)
+public class DemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+
+}
+```
+
+### 17-4. 예제
+
+#### 17-4-1. Entity
+
+```java
+@Entity
+@Getter
+@Setter
+public class Post {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String title;
+
+    @Lob
+    private String content;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+}
+```
+
+#### 17-4-2. Repository
+
+커스텀 리포지토리 커스터마이징 구현체를 상속 받았다.
+
+```java
+public interface PostRepository extends MyRepository<Post, Long> {
+}
+```
+
+#### 17-4-3. Test
+
+```java
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class PostRepositoryTest {
+
+    @Autowired
+    PostRepository postRepository;
+
+    @Test
+    public void crud(){
+
+        Post post = new Post();
+        post.setTitle("hibernate");
+
+        assertThat(postRepository.contains(post)).isFalse();
+
+        postRepository.save(post);
+
+        assertThat(postRepository.contains(post)).isTrue();
+
+    }
 }
 ```
