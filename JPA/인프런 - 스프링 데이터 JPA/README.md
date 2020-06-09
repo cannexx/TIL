@@ -17,6 +17,7 @@
 * [15. 스프링 데이터 Common 4. 쿼리 만들기 / 쿼리 만들기 실습](#15-스프링-데이터-common-4-쿼리-만들기--쿼리-만들기-실습)
 * [16. 스프링 데이터 Common: 커스텀 리포지토리](#16-스프링-데이터-Common-커스텀-리포지토리)
 * [17. 스프링 데이터 Common: 커스텀 리포지토리 커스터마이징](#17-스프링-데이터-Common-커스텀-리포지토리-커스터마이징)
+* [18. 스프링 데이터 Common: 도메인 이벤트](#18-스프링-데이터-Common-도메인-이벤트)
 
 ## 1. ORM 개요
 
@@ -1440,5 +1441,153 @@ public class PostRepositoryTest {
         assertThat(postRepository.contains(post)).isTrue();
 
     }
+}
+```
+
+## 18. 스프링 데이터 Common: 도메인 이벤트
+
+* Domain Event란 Domain(Entity)의 Event가 publish 될 때 해당 Event를 Listener 해서 처리하는 방법
+* Spring Framework가 제공하는 Event 와의 차이점은 Domain(Entity)에 특화된 기능을 제공한다는 점
+* Spring Data Domain Event Publisher는 Entity와 관련된 Event를 모아놨다가 save시 모두 처리 후 비운다.
+
+### 18-2. Spring Event Ex
+
+#### 18-2-1. Event
+
+전달하고자 하는 Event로 ApplicationEvent를 상속 받아서 구현하며, 중요한 것은 `super(source)`를 해줘야 한다.
+
+```java
+public class PostPublishedEvent extends ApplicationEvent {
+
+    private final Post post;
+
+    public PostPublishedEvent(Object source) {
+        super(source);
+        System.out.println("Event Publish!!!");
+        this.post = (Post) source;
+    }
+    
+    public Post getPost() {
+        return post;
+    }
+}
+```
+
+#### 18-2-2. Event publish (이벤트 발신자)
+
+Event를 생성 후 ApplicationContext에 있는 publishEvent 메서드를 통해 Event를 발생시킨다.
+ApplicationContext는 ApplicationEventPublisher를 상속받고 있기 때문에 Event 발생이 가능하다.
+
+```java
+public class PostRepositoryTest {
+
+    @Autowired
+    ApplicationContext applicationContext;
+
+    @Test
+    public void event(){
+        Post post = new Post();
+        post.setTitle("event");
+        PostPublishedEvent event = new PostPublishedEvent(post);
+
+        applicationContext.publishEvent(event);
+    }
+}
+```
+
+#### 18-2-4. Event Listener (이벤트 수신자)
+
+``ApplicationListener<E extends ApplicationEvent>``를 상속받아서 제네릭 Type으로 처리할 Event의 타입을 넣어주며, onApplicationEvent 메서드를 오버라이딩 해서 Event 수신을 처리한다. 또한 Event Listener는 Bean으로 등록 되어야 한다.
+
+ApplicationListener를 상속하는 방법 말고, @EventListener를 사용해서 listener 하는 방법도 있다.
+
+```java
+@Component
+public class PostListener implements ApplicationListener<PostPublishedEvent> {
+
+    @Override
+    public void onApplicationEvent(PostPublishedEvent postPublishedEvent) {
+        System.out.println("=========================");
+        System.out.println(postPublishedEvent.getPost().getTitle() + " is published ");
+        System.out.println("=========================");
+    }
+}
+/*
+@Component
+public class PostListener {
+
+    @EventListener
+    public void onApplicationEvent(PostPublishedEvent postPublishedEvent) {
+        System.out.println("Event Listener Start =========================");
+        System.out.println(postPublishedEvent.getPost().getTitle() + " is published ");
+        System.out.println("Event Listener End =========================");
+    }
+}
+*/
+```
+
+### 18-3. Spring Data Common Domain Event
+
+@DomainEvents와 @AfterDomainEventPublication 어노테이션을 사용해서 직접 구현할 수 있지만 Spring Data Common에서는 해당 기능을 구현한 ``AbstractAggregateRoot`` 클래스를 제공해 준다. 
+
+#### 18-3-1. Entity
+
+AbstractAggregateRoot의 registerEvent를 사용해서 Event를 등록하였다.
+
+```java
+@Entity
+@Getter
+@Setter
+public class Post extends AbstractAggregateRoot<Post> {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String title;
+
+    @Lob
+    private String content;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+
+    public Post publish(){
+        this.registerEvent(new PostPublishedEvent(this));
+        return this;
+    }
+}
+```
+
+#### 18-3-2. Test
+
+`post.publish()`를 사용해서 Event를 발생 시켰으며, 해당 Event는 save시 발생한다.
+
+```java
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class PostRepositoryTest {
+
+    @Autowired
+    PostRepository postRepository;
+
+    @Test
+    public void crud(){
+        //postRepository.findByPost();
+
+        Post post = new Post();
+        post.setTitle("hibernate");
+
+        assertThat(postRepository.contains(post)).isFalse();
+
+        postRepository.save(post.publish());
+
+        assertThat(postRepository.contains(post)).isTrue();
+
+        //postRepository.findByPost();
+
+        postRepository.delete(post);
+        postRepository.flush();
+    }
+
 }
 ```
