@@ -18,6 +18,7 @@
 * [16. 스프링 데이터 Common: 커스텀 리포지토리](#16-스프링-데이터-Common-커스텀-리포지토리)
 * [17. 스프링 데이터 Common: 커스텀 리포지토리 커스터마이징](#17-스프링-데이터-Common-커스텀-리포지토리-커스터마이징)
 * [18. 스프링 데이터 Common: 도메인 이벤트](#18-스프링-데이터-Common-도메인-이벤트)
+* [19. 스프링 데이터 Common: QueryDSL](#19-스프링-데이터-Common-QueryDSL)
 
 ## 1. ORM 개요
 
@@ -1590,4 +1591,244 @@ public class PostRepositoryTest {
     }
 
 }
+```
+
+## 19. 스프링 데이터 Common: QueryDSL
+
+### 19-1. Querydsl이란
+
+* TypeSafe한 Query를 만들 수 있게 도와주는 라이브러리
+* QueryDSL은 JPQL로 변환되고, JPQL은 SQL로 변환 된다.
+
+### 19-2. QueryDSL 연동 방법
+
+* querydsl-apt, querydsl-jpa dependency 추가
+* Version은 Spring Boot가 알아서 처리한다.
+
+```xml
+<dependency>
+  <groupId>com.querydsl</groupId>
+  <artifactId>querydsl-apt</artifactId>
+</dependency>
+
+<dependency>
+  <groupId>com.querydsl</groupId>
+  <artifactId>querydsl-jpa</artifactId>
+</dependency>
+```
+
+* APT plugins 추가
+  * 아래 설정은 Entity를 기반으로 Entity에 prefix로 'Q가 붙는 클래스(Querydsl Domain Model)를 /target/generated-sources/java 디렉토리 안에 자동 생성한다.
+  * APT란 Annotation Processing Tool의 약자로, Compile 단계에서 유저가 정의한 Annotation을 분석하고 처리하며, 분석 및 처리를 바탕으로 새로운 코드와 새로운 파일을 만들기도 한다.
+
+```xml
+<plugin>
+    <groupId>com.mysema.maven</groupId>
+    <artifactId>apt-maven-plugin</artifactId>
+    <version>1.1.3</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>process</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>target/generated-sources/java</outputDirectory>
+                <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+> <http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single/#jpa_integration> 참고
+
+## 19-3. querydsl 예제
+
+### 19-3-1. Entity
+
+```java
+@Entity
+@Getter
+@Setter
+public class Account {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String username;
+
+    private String firstName;
+
+    private String lastName;
+}
+```
+
+### 19-3-2. Repository
+
+Querydsl을 사용하기 위해 QuerydslPredicateExecutor 인터페이스를 상속 받았다.
+
+Repository에 QuerydslPredicateExecutor 인터페이스를 상속 받은 뒤 Compile을 진행하면, APT plugins에 설정한 경로에 Querydsl Domain Model인 QAccount가 생성된다.
+
+```java
+public interface AccountRepository extends JpaRepository<Account, Long>, QuerydslPredicateExecutor<Account> {
+
+}
+```
+
+### 19-3-3. Test
+
+* Predicate는 querydsl에 정의된 것을 사용! 다른 패키지에서도 많이 존재한다.
+* Predicate는 조건이라 생각하면 된다.
+
+```java
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class AccountRepositoryTest {
+
+    @Autowired
+    AccountRepository accountRepository;
+
+    @Test
+    public void crud(){
+        QAccount account = QAccount.account;
+        Predicate predicate = account
+                .firstName.containsIgnoreCase("jihun")
+                .and(account.lastName.startsWith("hong"));
+
+        Optional<Account> one = accountRepository.findOne(predicate);
+        assertThat(one).isEmpty();
+    }
+}
+```
+
+## 19-4. 기본 리포지토리 커스터마이징에 querydsl 사용하기
+
+### 19-4-1. Entity 및 기본 리포지토리 인터페이스 및 구현체
+
+```java
+@Entity
+@Getter
+@Setter
+public class Post {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String title;
+
+    @Lob
+    private String content;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+}
+
+
+@NoRepositoryBean
+public interface MyRepository<T, ID extends Serializable> extends JpaRepository<T, ID> {
+
+    boolean contains(T entity);
+}
+
+public class MyRepositoryImpl<T, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements MyRepository<T, ID> {
+
+    private EntityManager entityManager;
+
+    public MyRepositoryImpl(JpaEntityInformation<T, ?> entityInformation, EntityManager entityManager) {
+        super(entityInformation, entityManager);
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public boolean contains(T entity) {
+        return entityManager.contains(entity);
+    }
+}
+```
+
+### 19-4-2. Repository
+
+커스텀 리포지토리를 상속 받았으며, querydsl을 사용하기 위해 QuerydslPredicateExecutor를 상속 받았다.
+
+```java
+public interface PostRepository extends MyRepository<Post, Long>, QuerydslPredicateExecutor<Post> {
+
+}
+```
+
+### 19-4-3. Test
+
+아래 테스트 코드를 보면 코드는 별 문제가 없지만 예외가 발생한다. 예외의 내용은 Entity 타입의 Property가 존재하지 않는 다는 것이다.
+
+`Caused by: org.springframework.data.mapping.PropertyReferenceException: No property exists found for type Post!`
+
+```
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class PostRepositoryTest {
+
+    @Autowired
+    PostRepository postRepository;
+
+    @Test
+    public void crud(){
+
+        Post post = new Post();
+        post.setTitle("hibernate");
+
+        postRepository.save(post.publish());
+
+        Predicate predicate = QPost.post.title.containsIgnoreCase("hibernate");
+        Optional<Post> one = postRepository.findOne(predicate);
+        assertThat(one).isNotEmpty();
+
+    }
+}
+```
+
+### 19-4-4. 위의 Test 코드 실패의 원인
+
+위의 테스트가 실패한 이유는 Repository가 상속받은 커스텀 리포지토리에 QuerydslPredicateExecutor 구현체가 존재하지 않기 때문이다.
+
+해당 오류를 해결하는 방법은 커스텀 리포지토리에서 QuerydslPredicateExecutor 인터페이스의 구현체인 QuerydslJpaRepository를 상속받는 것이다. 
+
+QuerydslJpaRepository 클래스는 SimpleJpaRepository를 상속받고, QuerydslPredicateExecutor 인터페이스를 상속받아서 querydsl의 기능을 구현했기 때문에 spring-data-jpa와 querydsl의 기능을 모두 사용할 수 있다.
+
+아래는 변경 전 커스텀 리포지토리로 `SimpleJpaRepository`를 상속 받고 있다.
+
+```java
+public class MyRepositoryImpl<T, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements MyRepository<T, ID> {
+
+    private EntityManager entityManager;
+
+    public MyRepositoryImpl(JpaEntityInformation<T, ?> entityInformation, EntityManager entityManager) {
+        super(entityInformation, entityManager);
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public boolean contains(T entity) {
+        return entityManager.contains(entity);
+    }
+}
+```
+
+아래는 변경 후 커스텀 리포지토리로 `QuerydslJpaRepository`를 상속받고 있다.
+
+```java
+public class MyRepositoryImpl<T, ID extends Serializable> extends QuerydslJpaRepository<T, ID> implements MyRepository<T, ID> {
+
+    private EntityManager entityManager;
+
+    public MyRepositoryImpl(JpaEntityInformation<T, ID> entityInformation, EntityManager entityManager) {
+        super(entityInformation, entityManager);
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public boolean contains(T entity) {
+        return entityManager.contains(entity);
+    }
+}
+
 ```
