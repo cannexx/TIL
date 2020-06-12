@@ -972,7 +972,7 @@ public interface CommentRepository {
 * @NoRepositoryBean이 붙은 모든 Repository는 모든 Repository는 인스턴스를 생성하지 않는다.
   > 중간에 들어가는 Interface에 @NoRepositoryBean를 붙이는 이유는 해당 Interface를 Bean으로 생성하지 않게 하기 위해서 이다. 왜냐하면 해당 Interface를 상속받은 Repository가 Bean으로 등록이 되어야 하기 때문이다.
   그래서 JpaRepository, PagingAndSortingRepository, CrudRepository 인터페이스에도 정의되어 있다.
-  
+
 * 위의 `@RepositoryDefinition`를 사용해서 Repoistory를 정의하면 특정 Entity에 속하는 Repository이기 떄문에 다른 Entity에서 사용이 불가하다. 만약 해당 Repository를 공통으로 사용하고 싶다면 `@NoRepositoryBean`를 사용해서 Repository를 하나 만들어서 상속받으면 공통으로 사용 가능하다.
 
 ```java
@@ -1701,6 +1701,12 @@ public class AccountRepositoryTest {
     }
 }
 ```
+
+---
+
+아래 내용에서 Custom Repository를 상속받은 Repository에 QuerydslPredicateExecutor를 상속받으면, Custom Repository에 QuerydslPredicateExecutor에 대한 구현체가 없어서 querydsl 사용시 Error가 발생해서 Custom Repository의 구현체에서 SimpleJpaRepository가 아닌 QuerydslPredicateExecutor를 상속받고 SimpleJpaRepository를 상속받은 QuerydslJpaRepository를 사용해야한다는 내용인데, Spring data jpa가 버전이 올라가면서 QuerydslJpaRepository가 deprecated되고, SimpleJpaRepository를 사용해도 사용이 가능하도록 변경되었다. 물론 아래 방법 처럼 사용해도 오류는 발생하지 않지만 deprecated 되었으니 안쓰는게 좋을 듯 하다.
+
+> <https://www.inflearn.com/questions/29079> 참고
 
 ## 19-4. 기본 리포지토리 커스터마이징에 querydsl 사용하기
 
