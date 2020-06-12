@@ -1702,13 +1702,11 @@ public class AccountRepositoryTest {
 }
 ```
 
----
+## 19-4. 기본 리포지토리 커스터마이징에 querydsl 사용하기
 
 아래 내용에서 Custom Repository를 상속받은 Repository에 QuerydslPredicateExecutor를 상속받으면, Custom Repository에 QuerydslPredicateExecutor에 대한 구현체가 없어서 querydsl 사용시 Error가 발생해서 Custom Repository의 구현체에서 SimpleJpaRepository가 아닌 QuerydslPredicateExecutor를 상속받고 SimpleJpaRepository를 상속받은 QuerydslJpaRepository를 사용해야한다는 내용인데, Spring data jpa가 버전이 올라가면서 QuerydslJpaRepository가 deprecated되고, SimpleJpaRepository를 사용해도 사용이 가능하도록 변경되었다. 물론 아래 방법 처럼 사용해도 오류는 발생하지 않지만 deprecated 되었으니 안쓰는게 좋을 듯 하다.
 
 > <https://www.inflearn.com/questions/29079> 참고
-
-## 19-4. 기본 리포지토리 커스터마이징에 querydsl 사용하기
 
 ### 19-4-1. Entity 및 기본 리포지토리 인터페이스 및 구현체
 
@@ -1769,7 +1767,7 @@ public interface PostRepository extends MyRepository<Post, Long>, QuerydslPredic
 
 `Caused by: org.springframework.data.mapping.PropertyReferenceException: No property exists found for type Post!`
 
-```
+```java
 @RunWith(SpringRunner.class)
 @DataJpaTest
 public class PostRepositoryTest {
