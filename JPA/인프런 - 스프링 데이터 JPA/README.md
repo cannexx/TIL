@@ -970,8 +970,9 @@ public interface CommentRepository {
 ### 12-2. @NoRepositoryBean
 
 * @NoRepositoryBean이 붙은 모든 Repository는 모든 Repository는 인스턴스를 생성하지 않는다.
+  > 중간에 들어가는 Interface에 @NoRepositoryBean를 붙이는 이유는 해당 Interface를 Bean으로 생성하지 않게 하기 위해서 이다. 왜냐하면 해당 Interface를 상속받은 Repository가 Bean으로 등록이 되어야 하기 때문이다.
+  그래서 JpaRepository, PagingAndSortingRepository, CrudRepository 인터페이스에도 정의되어 있다.
   
-  > JpaRepository, PagingAndSortingRepository, CrudRepository 인터페이스에도 정의되어 있다. 왜냐하면 해당 Repository를 상속받은 Repository를 사용하기 때문이다.
 * 위의 `@RepositoryDefinition`를 사용해서 Repoistory를 정의하면 특정 Entity에 속하는 Repository이기 떄문에 다른 Entity에서 사용이 불가하다. 만약 해당 Repository를 공통으로 사용하고 싶다면 `@NoRepositoryBean`를 사용해서 Repository를 하나 만들어서 상속받으면 공통으로 사용 가능하다.
 
 ```java
