@@ -5,6 +5,9 @@
 * [3. IoC 컨테이너 3부 : @Autowired](#3-IoC-컨테이너-3부--@Autowired)
 * [4. IoC 컨테이너 4부 : @Component와 컴포넌트 스캔](#4-IoC-컨테이너-4부--@Component와-컴포넌트-스캔)
 * [5. IoC 컨테이너 5부 : Bean Scope](#5-IoC-컨테이너-5부--Bean-Scope)
+* [6. IoC 컨테이너 6부 : Environment 1부 profile](#6-IoC-컨테이너-6부--Environment-1부-profile)
+* [7. IoC 컨테이너 6부 : Environment 2부 property](#7-IoC-컨테이너-6부--Environment-2부-property)
+
 
 ## 1. IoC 컨테이너 1부 : 스프링 IoC 컨테이너와 빈
 
@@ -372,3 +375,305 @@ public class prototype{}
 
 1. Singleton 객체는 인스턴스가 하나만 생성되며 Property가 공유되기 때문에 Property의 값이 보장되지 않는다. 그렇기 때문에 Property 값 변경에 유의해야 한다.
 2. ApplicationContext 초기 구동시 인스턴스가 생성되기 때문에 Application 구동시 시간이 걸릴수 있다.
+
+## 6. IoC 컨테이너 6부 : Environment 1부. profile
+
+### 6-1. Environment란
+
+* `profile`과 `property`를 다루는 interface이다.
+* Environment를 통해 **활성화 할 Profile**을 설정 할 수 있다.
+* Environment를 통해 Application에 등록되는 **key:value 쌍으로 제공되는 property에 접근**할 수 있다.
+
+### 6-2. Profile 이란
+
+* 일반적으로 Profile이란 개발(dev), 테스트(test), 운영(prod) 등으로 구동환경을 세분화 하여 서비스를 관리하는 것으로, 이런 **식별 Keyword**를 `Profile`이라 한다.
+* Spring에서 `profile`은 **Bean들의 묶음**이며, **환경에 따라 다른 Bean들을 사용해야 하는 경우에 사용**하며, 특정 Profile에 Bean을 등록하지 않는 이상 Default Profile에 등록된다.
+
+### 6-2. Environment 사용하기
+
+#### 6-2-1. Environment를 주입받아서 사용하기
+
+Spring Boot 2.2.5 기준으로 Environment interface의 구현체로 StandardServletEnvironment를 주입받는다.
+
+```java
+@Component
+public class Runner implements ApplicationRunner {
+
+    @Autowired
+    Environment environment;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        System.out.println(Arrays.toString(environment.getActiveProfiles()));
+        System.out.println(Arrays.toString(environment.getDefaultProfiles()));
+    }
+}
+```
+
+#### 6-2-2. ApplicationContext 사용하기
+
+ApplicationContext는 EnvironmentCapable를 상속받으며, EnvironmentCapable의 getEnvironment() 메서드를 사용해서 Environment를 가져와서 Profile을 가져올 수 있다.
+> 해당 방법도 결국에는 Environment interface를 가져오기 때문에 구현체로 StandardServletEnvironment를 사용한다.
+
+```java
+@Component
+public class Runner implements ApplicationRunner {
+
+    @Autowired
+    ApplicationContext ctx;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        Environment env = ctx.getEnvironment();
+        System.out.println(Arrays.toString(env.getActiveProfiles()));
+        System.out.println(Arrays.toString(env.getDefaultProfiles()));
+    }
+}
+```
+
+### 6-3. Profile 정의하기
+
+`@Profile` 어노테이션을 사용해서 **특정 Profile에 Bean을 등록**할 수 있다. `@Profile`은 **클래스와 메소드에 사용가능하다.**
+
+`ProfileService`는 현재 profile의 내용을 출력하기 위한 getProfile()를 메서드로 가지고 있으며, `DefaultProfileService`와 `DevProfileService`는 `ProfileService`를 상속받아서 현재 Profile을 출력해 주는 로직이다.
+
+```java
+public interface ProfileService {
+    String getProfile();
+}
+```
+
+`DefaultProfileService`는 **Profile이 default 일 때** bean으로 등록이 된다.
+
+```java
+@Component
+public class DefaultProfileService implements ProfileService {
+
+    @Override
+    public String getProfile() {
+        return "default profile 입니다.";
+    }
+}
+```
+
+`DevProfileService`는 **Profile이 dev 일 때** bean으로 등록이 된다.
+
+```java
+@Component
+@Profile("dev")
+public class DevProfileService implements ProfileService {
+
+    @Override
+    public String getProfile() {
+        return "dev profile 입니다.";
+    }
+}
+```
+
+profile이 `default` 일 때는 **default profile 입니다.가 출력**될 것이며, `dev` 일 떄는 **dev profile 입니다.가 출력**된다.
+
+```java
+@Component
+public class Runner implements ApplicationRunner {
+
+    @Autowired
+    ProfileService profileService;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        System.out.println(profileService.getProfile());
+    }
+}
+```
+
+위에 방법에서 만약 `DefaultProfileService`의 Profile을 **dev**로 변경하고, `DevProfileService`의 Profile을 **default**로 변경한다면, 두 개의 클래스를 모두 수정해야한다. 예제에서는 클래스가 두 개밖에 안되지만 만약 개수가 많아진다면 실수할 확률도 높고 번거로우니 아래 방법인 **자바 설정파일을 만들어서 관리하는 것이 좋을 듯 하다.**
+
+#### 6-3-1. Profile 정의시 method에 정의하기
+
+```java
+@Configuration
+public class ProfileConfiguration {
+
+    @Bean
+    @Profile("default")
+    public DefaultProfileService defaultProfileService(){
+        return new DefaultProfileService();
+    }
+
+    @Bean
+    @Profile("dev")
+    public DevProfileService devProfileService(){
+        return new DevProfileService();
+    }
+}
+```
+
+#### 6-3-2. Profile 정의시 class에 정의하기
+
+```java
+@Configuration
+@Profile("default")
+public class DefaultProfileConfiguration {
+
+    @Bean
+    public DefaultProfileService defaultProfileService(){
+        return new DefaultProfileService();
+    }
+}
+```
+
+```java
+@Configuration
+@Profile("dev")
+public class DevProfileConfiguration {
+
+    @Bean
+    public DevProfileService devProfileService(){
+        return new DevProfileService();
+    }
+}
+```
+
+### 6-4. Profile Expression
+
+Profile Expression을 사용하여 프로파일을 유연하게 지정할 수 있다.
+
+* `!` (not) / `&` (and) / `|` (or)
+
+아래 예제에는 !(not)을 사용했기 때문에 profile이 default가 아닐 때 bean으로 등록된다.
+
+```java
+@Configuration
+@Profile("!default")
+public class DefaultProfileConfiguration {
+
+    @Bean
+    public DefaultProfileService defaultProfileService(){
+        return new DefaultProfileService();
+    }
+}
+```
+
+### 6-5. Profile 활성화 하기
+
+* VM option(intelliJ) 또는 VM arguments(Eclipse)에 `-Dspring.profiles.acvtive=”프로파일명”`를 사용해서 지정할 수 있다.
+* Spring Boot일 경우 Active profiles에 지정할 수 있다.
+
+![3](./images/3.png)
+
+## 7. IoC 컨테이너 6부 : Environment 2부 property
+
+### 7-1. Property란
+
+모든 형태의 `key:value`를 의미한다. **.properties 파일**에 정의되어 있을 수도 있고, **환경 변수**에 저장되어 있을 수도 있고, **커맨드 라인 인자**로 전달되는 값일 수도 있다.
+
+**즉, 여러 형태로 제공 되는 key:value를 의미한다.**
+
+### 7-2. Property 우선순위
+
+Environment를 통해 property에 접근시 **계층형으로 접근**한다. 계층형으로 접근하기 때문에 우선순위가 존재한다.
+
+우선순위는 아래와 같다.
+
+1. ServletConfig 매개변수
+    * ServletConfig에 정의된 parameter는 해당 Servlet에서만 사용할 수 있다.
+    * Spirng 에서는 DispathcerServlet에 의해 생성되는 WebApplicationContext property가 생성된다.
+2. ServletContext 매개변수
+    * ServletContext에 정의된 정의된 parameter는 동일 Web Application 내 모든 Servlet에서 사용할 수 있다.
+    * Spring 에서는 ContextLoaderListener에 의해 생성되는 Root WebApplicationContext에 property가 생성된다.
+3. JNDI(java:comp/env/)
+4. JVM 시스템 프로퍼티(-Dkey=“value”)
+5. JVM 시스템 환경 변수(운영 체제 환경 변수)
+
+> ServletConfig와 ServletContext 둘 다 Servlet에 데이터를 전달하기 위해 사용되는 인터페이스이다.
+
+### 7-2-1. application.properties 및 JVM 시스템 프로퍼티
+
+name이란 key를 `ServletContext`와 `JVM 시스템 프로퍼티`에 정의 하였다.
+
+```java
+server.servlet.context-parameters.name=ServletContext
+```
+
+![4](./images/4.png)
+
+### 7-2-2. Runner
+
+우선순위에 의해 `ServletContext`의 값인 **ServletContext**가 출력된다.
+
+```java
+@Component
+public class Runner implements ApplicationRunner {
+
+    @Autowired
+    Environment environment;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        System.out.println(environment.getProperty("name"));
+    }
+}
+```
+
+### 7-3. @PropertySource
+
+* `@PropertySource`를 사용해서 `.properties` 파일을 읽어와 `Environment` 인터페이스를 사용해서 property를 가져올 수 있다.
+* `@Configuration`가 사용된 곳에서 사용가능하다!
+
+### 7-3-1. application.properties
+
+```java
+my.domain=jihun.dev
+```
+
+### 7-3-2. TestBean
+
+```java
+public class TestBean {
+
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+
+### 7-3-3. AppConfig
+
+```java
+@Configuration
+@PropertySource("classpath:/application.properties")
+public class AppConfig {
+
+    @Autowired
+    Environment environment;
+
+    @Bean
+    public TestBean testBean(){
+        TestBean testBean = new TestBean();
+        testBean.setName(environment.getProperty("my.domain"));
+        return testBean;
+    }
+}
+```
+
+### 7-3-4. Runner
+
+```java
+@Component
+public class Runner implements ApplicationRunner {
+
+    @Autowired
+    TestBean testBean;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        System.out.println(testBean.getName());
+    }
+}
+```
